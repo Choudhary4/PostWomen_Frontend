@@ -93,7 +93,7 @@ const ThemeManager = () => {
 
       if (response.ok) {
         await loadData();
-        setShowThemeForm(false);
+        setActiveTab('themes');
         setThemeForm({
           name: '',
           type: 'light',
@@ -172,7 +172,7 @@ const ThemeManager = () => {
         <h3 className="text-lg font-semibold">Available Themes</h3>
         <button 
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          onClick={() => setShowThemeForm(true)}
+          onClick={() => setActiveTab('editor')}
         >
           + Create Custom Theme
         </button>
@@ -523,7 +523,7 @@ const ThemeManager = () => {
                 Create Theme
               </button>
               <button
-                onClick={() => setShowThemeForm(false)}
+                onClick={() => setActiveTab('themes')}
                 className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
               >
                 Cancel
