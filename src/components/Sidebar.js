@@ -59,7 +59,7 @@ const Sidebar = ({ collections, onCreateCollection, onSelectRequest, onAddReques
   };
 
   return (
-    <div className="w-80 lg:w-80 w-full bg-white border-r border-gray-200 flex flex-col h-full">
+    <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full overflow-x-hidden">
       {/* Mobile Header */}
       <div className="lg:hidden flex items-center justify-between p-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900">Navigation</h2>

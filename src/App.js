@@ -265,7 +265,7 @@ function AppContent() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="h-screen flex flex-col bg-gray-50 no-scrollbar-x app-container">
       <Header 
         onOpenEnvironments={() => setShowEnvironmentManager(true)}
         onOpenImportExport={() => setShowImportExport(true)}
@@ -275,7 +275,7 @@ function AppContent() {
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
       
-      <div className="flex flex-1 overflow-hidden relative">
+      <div className="flex flex-1 overflow-hidden relative no-scrollbar-x">
         {/* Mobile Sidebar Overlay */}
         {isSidebarOpen && (
           <div 
@@ -288,7 +288,7 @@ function AppContent() {
         <div className={`
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
           lg:translate-x-0 lg:static fixed inset-y-0 left-0 z-30 
-          transition-transform duration-300 ease-in-out
+          transition-transform duration-300 ease-in-out prevent-overflow
         `}>
           <Sidebar 
             collections={collections}
@@ -304,9 +304,9 @@ function AppContent() {
         </div>
         
         {/* Main Content */}
-        <div className="flex-1 flex flex-col min-w-0">
-          <div className="flex-1 p-3 sm:p-4 lg:p-6 overflow-auto">
-            <div className="max-w-6xl mx-auto space-y-4 lg:space-y-6">
+        <div className="flex-1 flex flex-col min-w-0 prevent-overflow">
+          <div className="flex-1 p-3 sm:p-4 lg:p-6 overflow-auto no-scrollbar-x">
+            <div className="max-w-6xl mx-auto space-y-4 lg:space-y-6 w-full-safe">
               {currentView === 'builder' ? (
                 <>
                   <RequestBuilder
