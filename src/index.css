@@ -1,0 +1,276 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import authentication styles */
+@import url('./components/auth/AuthForms.css');
+@import url('./components/auth/UserProfile.css');
+@import url('./components/auth/LoadingSpinner.css');
+@import url('./components/admin/AdminPanel.css');
+
+/* Default theme variables - will be overridden by dynamic theme */
+:root {
+  --color-primary: #007bff;
+  --color-primary-hover: #0056b3;
+  --color-primary-active: #004085;
+  --color-primary-light: #e3f2fd;
+  --color-secondary: #6c757d;
+  --color-secondary-hover: #5a6268;
+  --color-secondary-light: #f8f9fa;
+  --color-background: #ffffff;
+  --color-background-secondary: #f8f9fa;
+  --color-background-tertiary: #e9ecef;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f8f9fa;
+  --color-surface-active: #e9ecef;
+  --color-text-primary: #212529;
+  --color-text-secondary: #6c757d;
+  --color-text-muted: #adb5bd;
+  --color-text-inverse: #ffffff;
+  --color-border: #dee2e6;
+  --color-border-light: #f1f3f4;
+  --color-shadow: rgba(0, 0, 0, 0.1);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  
+  body {
+    background-color: var(--color-background-secondary) !important;
+    color: var(--color-text-primary) !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  }
+  
+  /* Aggressive theme overrides */
+  .bg-white,
+  .bg-white:hover,
+  .bg-white:focus {
+    background-color: var(--color-surface) !important;
+  }
+  
+  .bg-gray-50,
+  .bg-gray-100 {
+    background-color: var(--color-background-secondary) !important;
+  }
+  
+  .bg-gray-200 {
+    background-color: var(--color-background-tertiary) !important;
+  }
+  
+  .text-gray-900,
+  .text-gray-800 {
+    color: var(--color-text-primary) !important;
+  }
+  
+  .text-gray-600,
+  .text-gray-700 {
+    color: var(--color-text-secondary) !important;
+  }
+  
+  .text-gray-500 {
+    color: var(--color-text-muted) !important;
+  }
+  
+  .border-gray-200,
+  .border-gray-300 {
+    border-color: var(--color-border) !important;
+  }
+  
+  /* Form controls */
+  input,
+  textarea,
+  select {
+    background-color: var(--color-surface) !important;
+    color: var(--color-text-primary) !important;
+    border-color: var(--color-border) !important;
+  }
+  
+  input:focus,
+  textarea:focus,
+  select:focus {
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 3px var(--color-primary-light) !important;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    background-color: var(--color-primary) !important;
+    color: var(--color-text-inverse) !important;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    border: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  
+  .btn-primary:hover {
+    background-color: var(--color-primary-hover) !important;
+    transform: translateY(-1px);
+  }
+  
+  .btn-secondary {
+    background-color: var(--color-background-secondary) !important;
+    color: var(--color-text-primary) !important;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    border: 1px solid var(--color-border) !important;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  
+  .btn-secondary:hover {
+    background-color: var(--color-background-tertiary) !important;
+    border-color: var(--color-primary) !important;
+  }
+  
+  .input-field {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-border) !important;
+    border-radius: 0.375rem;
+    background-color: var(--color-surface) !important;
+    color: var(--color-text-primary) !important;
+    transition: border-color 0.2s ease;
+  }
+  
+  .input-field:focus {
+    outline: none;
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 3px var(--color-primary-light) !important;
+  }
+  
+  .card {
+    background-color: var(--color-surface) !important;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px var(--color-shadow);
+    border: 1px solid var(--color-border) !important;
+  }
+}
+
+/* Comprehensive theme-aware overrides for Tailwind classes */
+.bg-blue-500,
+.bg-blue-600 {
+  background-color: var(--color-primary) !important;
+}
+
+.hover\\:bg-blue-600:hover,
+.hover\\:bg-blue-500:hover {
+  background-color: var(--color-primary-hover) !important;
+}
+
+.text-blue-600,
+.text-blue-500 {
+  color: var(--color-primary) !important;
+}
+
+.border-blue-600,
+.border-blue-500 {
+  border-color: var(--color-primary) !important;
+}
+
+/* Additional theme overrides */
+.shadow-sm {
+  box-shadow: 0 1px 2px var(--color-shadow) !important;
+}
+
+.shadow {
+  box-shadow: 0 1px 3px var(--color-shadow) !important;
+}
+
+.shadow-md {
+  box-shadow: 0 4px 6px var(--color-shadow) !important;
+}
+
+/* Ensure proper theming for hover states */
+.hover\\:bg-gray-50:hover {
+  background-color: var(--color-surface-hover) !important;
+}
+
+.hover\\:bg-gray-100:hover {
+  background-color: var(--color-background-tertiary) !important;
+}
+
+.hover\\:text-gray-800:hover {
+  color: var(--color-text-primary) !important;
+}
+
+/* Dark theme support */
+[data-theme="dark"] {
+  --color-primary: #4f9cf9;
+  --color-primary-hover: #3b82f6;
+  --color-primary-active: #2563eb;
+  --color-primary-light: rgba(79, 156, 249, 0.1);
+  --color-secondary: #9ca3af;
+  --color-secondary-hover: #6b7280;
+  --color-secondary-light: #374151;
+  --color-background: #111827;
+  --color-background-secondary: #1f2937;
+  --color-background-tertiary: #374151;
+  --color-surface: #1f2937;
+  --color-surface-hover: #374151;
+  --color-surface-active: #4b5563;
+  --color-text-primary: #f9fafb;
+  --color-text-secondary: #d1d5db;
+  --color-text-muted: #9ca3af;
+  --color-text-inverse: #111827;
+  --color-border: #374151;
+  --color-border-light: #4b5563;
+  --color-shadow: rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive Utility Classes */
+@layer utilities {
+  /* Touch-friendly interactions */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+  
+  /* Mobile-first button sizing */
+  .btn-mobile {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    min-height: 44px; /* Apple's minimum touch target */
+  }
+  
+  @media (min-width: 640px) {
+    .btn-mobile {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      min-height: auto;
+    }
+  }
+  
+  /* Responsive form inputs */
+  .input-mobile {
+    padding: 0.75rem;
+    font-size: 1rem;
+    min-height: 44px;
+  }
+  
+  @media (min-width: 640px) {
+    .input-mobile {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      min-height: auto;
+    }
+  }
+  
+  /* Container responsive */
+  .container-responsive {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  
+  @media (max-width: 640px) {
+    .container-responsive {
+      padding: 0 0.75rem;
+    }
+  }
+}
