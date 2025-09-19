@@ -24,6 +24,8 @@ import { storageService } from './services/storageService';
 import { environmentService } from './services/environmentService';
 import { collectionRunnerService } from './services/collectionRunnerService';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:9000/api';
+
 function AppContent() {
   const { isLoading } = useAuth();
   const [currentRequest, setCurrentRequest] = useState({
@@ -72,7 +74,7 @@ function AppContent() {
       const currentUserId = 'default';
       console.log('Loading active theme for user:', currentUserId);
       
-      const response = await fetch(`/api/themes/users/${currentUserId}/active`);
+      const response = await fetch(`${API_BASE_URL}/themes/users/${currentUserId}/active`);
       if (response.ok) {
         const activeTheme = await response.json();
         console.log('Active theme loaded:', activeTheme);
@@ -99,7 +101,7 @@ function AppContent() {
     try {
       console.log('Applying theme:', themeId);
       
-      const response = await fetch(`/api/themes/${themeId}/css`);
+      const response = await fetch(`${API_BASE_URL}/themes/${themeId}/css`);
       if (response.ok) {
         const css = await response.text();
         console.log('Theme CSS loaded:', css.substring(0, 200) + '...');
