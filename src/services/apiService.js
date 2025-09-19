@@ -3,9 +3,7 @@ import { environmentService } from './environmentService';
 import { testingFramework } from './testingFramework';
 import { oauthService } from './oauthService';
 
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://post-women-backend.vercel.app/api' 
-  : 'http://localhost:9000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:9000/api';
 
 class ApiService {
   async sendRequest(requestData) {

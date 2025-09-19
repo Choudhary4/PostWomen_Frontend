@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:9000/api';
+
 const ThemeManager = () => {
   const [themes, setThemes] = useState([]);
   const [activeTheme, setActiveTheme] = useState(null);
@@ -27,9 +29,9 @@ const ThemeManager = () => {
   const loadData = async () => {
     try {
       const [themesRes, activeThemeRes, prefsRes] = await Promise.all([
-        fetch('/api/themes'),
-        fetch(`/api/themes/users/${currentUserId}/active`),
-        fetch(`/api/themes/users/${currentUserId}/preferences`)
+        fetch(`${API_BASE_URL}/themes`),
+        fetch(`${API_BASE_URL}/themes/users/${currentUserId}/active`),
+        fetch(`${API_BASE_URL}/themes/users/${currentUserId}/preferences`)
       ]);
 
       if (themesRes.ok) setThemes(await themesRes.json());
@@ -42,7 +44,7 @@ const ThemeManager = () => {
 
   const handleSetActiveTheme = async (themeId) => {
     try {
-      const response = await fetch(`/api/themes/users/${currentUserId}/active`, {
+      const response = await fetch(`${API_BASE_URL}/themes/users/${currentUserId}/active`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ themeId })
@@ -60,7 +62,7 @@ const ThemeManager = () => {
 
   const applyTheme = async (themeId) => {
     try {
-      const response = await fetch(`/api/themes/${themeId}/css`);
+      const response = await fetch(`${API_BASE_URL}/themes/${themeId}/css`);
       if (response.ok) {
         const css = await response.text();
         
@@ -83,7 +85,7 @@ const ThemeManager = () => {
 
   const handleCreateTheme = async () => {
     try {
-      const response = await fetch('/api/themes', {
+      const response = await fetch(`${API_BASE_URL}/themes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(themeForm)
@@ -115,7 +117,7 @@ const ThemeManager = () => {
 
   const handleCloneTheme = async (themeId, newName) => {
     try {
-      const response = await fetch(`/api/themes/${themeId}/clone`, {
+      const response = await fetch(`${API_BASE_URL}/themes/${themeId}/clone`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newName })
@@ -133,7 +135,7 @@ const ThemeManager = () => {
     if (!window.confirm('Are you sure you want to delete this theme?')) return;
 
     try {
-      const response = await fetch(`/api/themes/${themeId}`, {
+      const response = await fetch(`${API_BASE_URL}/themes/${themeId}`, {
         method: 'DELETE'
       });
 
@@ -150,7 +152,7 @@ const ThemeManager = () => {
 
   const handleUpdatePreferences = async (updates) => {
     try {
-      const response = await fetch(`/api/themes/users/${currentUserId}/preferences`, {
+      const response = await fetch(`${API_BASE_URL}/themes/users/${currentUserId}/preferences`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
