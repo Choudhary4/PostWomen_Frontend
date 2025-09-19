@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+  <defs>
+    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4ecdc4;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="16" height="16" rx="2" fill="url(#iconGrad)"/>
+  
+  <!-- Letter P -->
+  <path d="M 3 2 L 3 14 L 5 14 L 5 9 L 9 9 C 10.5 9 12 7.5 12 6 C 12 4.5 10.5 3 9 3 L 3 2 Z M 5 4 L 9 4 C 9.5 4 10 4.5 10 5 C 10 5.5 9.5 6 9 6 L 5 6 L 5 4 Z" fill="white"/>
+</svg>
