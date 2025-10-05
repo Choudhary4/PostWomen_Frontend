@@ -33,26 +33,30 @@ A comprehensive, enterprise-grade API testing platform built with React and Node
 - Git
 
 ### Installation
-
-1. **Clone the repository**
+2. **Backend Repository**
    ```bash
-   git clone <your-repo-url>
+   https://github.com/Choudhary4/PostWomen_Backend
+   ```
+  
+2. **Clone the repository**
+   ```bash
+   git clone https://github.com/Choudhary4/PostWomen_Frontend.git
    cd postman-mvp
    ```
 
-2. **Install backend dependencies**
+3. **Install backend dependencies**
    ```bash
    cd backend
    npm install
    ```
 
-3. **Install frontend dependencies**
+4. **Install frontend dependencies**
    ```bash
    cd ../frontend
    npm install
    ```
 
-4. **Start the backend server**
+5. **Start the backend server**
    ```bash
    cd ../backend
    node server.js
@@ -63,13 +67,13 @@ A comprehensive, enterprise-grade API testing platform built with React and Node
    # Double-click: start-backend.bat
    ```
 
-5. **Start the frontend development server**
+6. **Start the frontend development server**
    ```bash
    cd ../frontend
    npm start
    ```
 
-6. **Access the application**
+7. **Access the application**
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:9000
 
@@ -307,4 +311,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ---
 
 For detailed feature instructions and step-by-step guides, visit the **Documentation** tab in the application interface.#
+
 
