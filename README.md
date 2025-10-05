@@ -5,12 +5,14 @@ A comprehensive, enterprise-grade API testing platform built with React and Node
 ## 🌟 Features
 
 ### Core API Testing
+
 - **Request Builder**: Full-featured HTTP client with multiple authentication methods
 - **Response Viewer**: Advanced response analysis with syntax highlighting
 - **Collection Management**: Organize and manage API collections
 - **Environment Variables**: Dynamic variable management and templating
 
 ### Advanced Features
+
 - **Mock Server**: Create dynamic mock APIs with template variables
 - **WebSocket Testing**: Real-time WebSocket connection testing
 - **Collection Runner**: Automated test execution and reporting
@@ -20,6 +22,7 @@ A comprehensive, enterprise-grade API testing platform built with React and Node
 - **Import/Export**: Support for various API formats
 
 ### Developer Tools
+
 - **Test Scripts**: Pre/post-request script execution
 - **GraphQL Support**: GraphQL query builder and validation
 - **OAuth Integration**: Complete OAuth 2.0 flow support
@@ -28,50 +31,57 @@ A comprehensive, enterprise-grade API testing platform built with React and Node
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js (v14 or higher)
 - npm or yarn
 - Git
 
 ### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd postman-mvp
-   ```
+**1. Clone the repository**
 
-2. **Install backend dependencies**
-   ```bash
-   cd backend
-   npm install
-   ```
+```bash
+git clone https://github.com/Choudhary4/PostWomen_Frontend.git
+cd PostWomen_Frontend
+```
 
-3. **Install frontend dependencies**
-   ```bash
-   cd ../frontend
-   npm install
-   ```
+**2. Install backend dependencies**
 
-4. **Start the backend server**
-   ```bash
-   cd ../backend
-   node server.js
-   ```
-   
-   Or use the batch file (Windows):
-   ```bash
-   # Double-click: start-backend.bat
-   ```
+```bash
+cd backend
+npm install
+```
 
-5. **Start the frontend development server**
-   ```bash
-   cd ../frontend
-   npm start
-   ```
+**3. Install frontend dependencies**
 
-6. **Access the application**
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:9000
+```bash
+cd ../frontend
+npm install
+```
+
+**4. Start the backend server**
+
+```bash
+cd ../backend
+node server.js
+```
+
+Or use the batch file (Windows):
+```bash
+# Double-click: start-backend.bat
+```
+
+**5. Start the frontend development server**
+
+```bash
+cd ../frontend
+npm start
+```
+
+**6. Access the application**
+
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:9000
 
 ## 📖 Documentation
 
@@ -98,28 +108,30 @@ The application includes comprehensive interactive documentation accessible thro
 ## 🛠️ Architecture
 
 ### Frontend (React)
+
 ```
 frontend/
 ├── src/
-│   ├── components/          # React components
+│   ├── components/              # React components
 │   │   ├── RequestBuilder.js
 │   │   ├── MockServer.js
 │   │   ├── WebSocketTesting.js
 │   │   ├── TeamCollaboration.js
-│   │   ├── Documentation.js  # Interactive docs
+│   │   ├── Documentation.js    # Interactive docs
 │   │   └── ...
-│   ├── services/           # Service layer
+│   ├── services/               # Service layer
 │   │   ├── apiService.js
 │   │   ├── storageService.js
 │   │   └── ...
-│   └── App.js              # Main application
+│   └── App.js                  # Main application
 ```
 
 ### Backend (Node.js/Express)
+
 ```
 backend/
-├── server.js               # Main server file
-├── services/              # Service modules
+├── server.js                   # Main server file
+├── services/                   # Service modules
 │   ├── mockServerService.js
 │   ├── webSocketService.js
 │   ├── teamService.js
@@ -130,7 +142,9 @@ backend/
 ## 🔧 Configuration
 
 ### Environment Variables
+
 Create a `.env` file in the backend directory:
+
 ```env
 PORT=9000
 NODE_ENV=development
@@ -138,7 +152,9 @@ CORS_ORIGIN=http://localhost:3000
 ```
 
 ### Mock Server Configuration
+
 Mock servers support template variables for dynamic responses:
+
 - `{{params.id}}` - URL parameters
 - `{{faker.name.fullName}}` - Random names
 - `{{faker.internet.email}}` - Random emails
@@ -148,6 +164,7 @@ Mock servers support template variables for dynamic responses:
 ## 🧪 Testing
 
 ### Running Tests
+
 ```bash
 # Backend tests
 cd backend
@@ -159,7 +176,9 @@ npm test
 ```
 
 ### Collection Runner
+
 Use the Collection Runner for automated testing:
+
 1. Create a collection with test scripts
 2. Configure environment variables
 3. Run the collection with specified iterations
@@ -168,12 +187,14 @@ Use the Collection Runner for automated testing:
 ## 🤝 Team Collaboration
 
 ### Setting up Teams
+
 1. Go to the Team tab
 2. Create a new team workspace
 3. Invite members with appropriate roles
 4. Share collections and environments
 
 ### Roles and Permissions
+
 - **Owner**: Full access and team management
 - **Admin**: Manage members and settings
 - **Member**: Access team resources
@@ -182,13 +203,16 @@ Use the Collection Runner for automated testing:
 ## 🎨 Customization
 
 ### Themes
+
 The application supports multiple themes:
+
 - **Light**: Clean and bright interface
 - **Dark**: Easy on the eyes for long sessions
 - **Monokai**: Developer-friendly color scheme
 - **Ocean**: Calm blue tones
 
 Create custom themes through the Theme Manager with:
+
 - Color picker interface
 - Live preview
 - CSS variable system
@@ -197,13 +221,16 @@ Create custom themes through the Theme Manager with:
 ## 🔌 API Integration
 
 ### Authentication Methods
+
 - **Bearer Token**: JWT and API tokens
 - **Basic Auth**: Username/password
 - **API Key**: Header or query parameter
 - **OAuth 2.0**: Complete OAuth flow support
 
 ### WebSocket Support
+
 Real-time testing capabilities:
+
 - Connection management
 - Message sending/receiving
 - Connection event monitoring
@@ -212,12 +239,14 @@ Real-time testing capabilities:
 ## 📊 Analytics and Monitoring
 
 ### Response Analysis
+
 - Performance metrics tracking
 - Response size monitoring
 - Status code analysis
 - Response time trends
 
 ### Mock Server Analytics
+
 - Request logging and monitoring
 - Route matching analysis
 - Usage statistics
@@ -227,22 +256,26 @@ Real-time testing capabilities:
 
 ### Common Issues
 
-**Backend Connection Failed**
+#### Backend Connection Failed
+
 - Ensure backend server is running on port 9000
 - Check for port conflicts
 - Verify firewall settings
 
-**CORS Errors**
+#### CORS Errors
+
 - Check API server CORS configuration
 - Use proxy endpoint for cross-origin requests
 - Add proper headers to requests
 
-**Mock Server Issues**
+#### Mock Server Issues
+
 - Verify mock configuration is enabled
 - Check route patterns match request URLs
 - Review request logs for debugging
 
 ### Getting Help
+
 1. Check the interactive documentation (Docs tab)
 2. Review the troubleshooting section
 3. Check browser console for error messages
@@ -251,6 +284,7 @@ Real-time testing capabilities:
 ## 🔄 Updates and Maintenance
 
 ### Updating Dependencies
+
 ```bash
 # Backend
 cd backend
@@ -262,7 +296,9 @@ npm update
 ```
 
 ### Database Backup
+
 Collections and configurations are stored locally. Regular backups recommended:
+
 - Use Import/Export functionality
 - Export collections as JSON
 - Backup environment configurations
@@ -270,6 +306,7 @@ Collections and configurations are stored locally. Regular backups recommended:
 ## 📋 Roadmap
 
 ### Upcoming Features
+
 - [ ] API Documentation Generator
 - [ ] Performance Testing Suite
 - [ ] Advanced Monitoring Dashboard
@@ -278,6 +315,7 @@ Collections and configurations are stored locally. Regular backups recommended:
 - [ ] Mobile Companion App
 
 ### Recent Updates
+
 - ✅ Interactive Documentation System
 - ✅ Enhanced Mock Server with Templates
 - ✅ Advanced Response Comparison
@@ -287,6 +325,7 @@ Collections and configurations are stored locally. Regular backups recommended:
 ## 🤝 Contributing
 
 We welcome contributions! Please:
+
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
@@ -306,6 +345,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-For detailed feature instructions and step-by-step guides, visit the **Documentation** tab in the application interface.#   P o s t W o m e n 
- 
- 
+**For detailed feature instructions and step-by-step guides, visit the Documentation tab in the application interface.** 
