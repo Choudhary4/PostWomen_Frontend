@@ -1,143 +1,132 @@
-class StorageService {
-  constructor() {
-    this.COLLECTIONS_KEY = 'postman_mvp_collections';
-    this.HISTORY_KEY = 'postman_mvp_history';
-    this.SETTINGS_KEY = 'postman_mvp_settings';
-  }
+/**
+ * storageService.js
+ *
+ * All localStorage operations for collections, request history, and environments.
+ * Everything is namespaced under 'pw_' to avoid key collisions.
+ */
 
-  // Collections management
-  getCollections() {
-    try {
-      const collections = localStorage.getItem(this.COLLECTIONS_KEY);
-      return collections ? JSON.parse(collections) : [];
-    } catch (error) {
-      console.error('Error loading collections:', error);
-      return [];
-    }
-  }
+const KEYS = {
+  COLLECTIONS: 'pw_collections',
+  HISTORY:     'pw_history',
+  ENVS:        'pw_environments',
+  ACTIVE_ENV:  'pw_active_env',
+};
 
-  saveCollections(collections) {
-    try {
-      localStorage.setItem(this.COLLECTIONS_KEY, JSON.stringify(collections));
-    } catch (error) {
-      console.error('Error saving collections:', error);
-    }
-  }
-
-  createCollection(collection) {
-    const collections = this.getCollections();
-    collections.push(collection);
-    this.saveCollections(collections);
-  }
-
-  deleteCollection(collectionId) {
-    const collections = this.getCollections();
-    const filtered = collections.filter(c => c.id !== collectionId);
-    this.saveCollections(filtered);
-  }
-
-  saveRequest(request, collectionId) {
-    const collections = this.getCollections();
-    const collectionIndex = collections.findIndex(c => c.id === collectionId);
-    
-    if (collectionIndex !== -1) {
-      collections[collectionIndex].requests.push(request);
-      this.saveCollections(collections);
-    }
-  }
-
-  deleteRequest(requestId, collectionId) {
-    const collections = this.getCollections();
-    const collectionIndex = collections.findIndex(c => c.id === collectionId);
-    
-    if (collectionIndex !== -1) {
-      collections[collectionIndex].requests = collections[collectionIndex].requests
-        .filter(r => r.id !== requestId);
-      this.saveCollections(collections);
-    }
-  }
-
-  // History management
-  getHistory() {
-    try {
-      const history = localStorage.getItem(this.HISTORY_KEY);
-      return history ? JSON.parse(history) : [];
-    } catch (error) {
-      console.error('Error loading history:', error);
-      return [];
-    }
-  }
-
-  saveToHistory(request, response) {
-    const history = this.getHistory();
-    const historyItem = {
-      id: Date.now().toString(),
-      request,
-      response,
-      timestamp: new Date().toISOString()
-    };
-    
-    history.unshift(historyItem);
-    
-    // Keep only last 100 items
-    if (history.length > 100) {
-      history.splice(100);
-    }
-    
-    try {
-      localStorage.setItem(this.HISTORY_KEY, JSON.stringify(history));
-    } catch (error) {
-      console.error('Error saving to history:', error);
-    }
-  }
-
-  clearHistory() {
-    localStorage.removeItem(this.HISTORY_KEY);
-  }
-
-  // Settings management
-  getSettings() {
-    try {
-      const settings = localStorage.getItem(this.SETTINGS_KEY);
-      return settings ? JSON.parse(settings) : {
-        theme: 'light',
-        autoFormat: true,
-        timeout: 30000
-      };
-    } catch (error) {
-      console.error('Error loading settings:', error);
-      return {};
-    }
-  }
-
-  saveSettings(settings) {
-    try {
-      localStorage.setItem(this.SETTINGS_KEY, JSON.stringify(settings));
-    } catch (error) {
-      console.error('Error saving settings:', error);
-    }
-  }
-
-  // Utility methods
-  exportData() {
-    return {
-      collections: this.getCollections(),
-      history: this.getHistory(),
-      settings: this.getSettings(),
-      exportedAt: new Date().toISOString()
-    };
-  }
-
-  importData(data) {
-    try {
-      if (data.collections) this.saveCollections(data.collections);
-      if (data.settings) this.saveSettings(data.settings);
-      return true;
-    } catch (error) {
-      console.error('Error importing data:', error);
-      return false;
-    }
-  }
+// ─── Helpers ────────────────────────────────────────────────────────────
+function load(key, fallback = null) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch { return fallback; }
 }
 
-export const storageService = new StorageService();
+function save(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+// ─── Collections ─────────────────────────────────────────────────────────
+export function getCollections() {
+  return load(KEYS.COLLECTIONS, []);
+}
+
+export function saveCollections(collections) {
+  save(KEYS.COLLECTIONS, collections);
+}
+
+export function createCollection(name) {
+  const collections = getCollections();
+  const newCollection = { id: Date.now().toString(), name, requests: [], createdAt: new Date().toISOString() };
+  collections.push(newCollection);
+  saveCollections(collections);
+  return newCollection;
+}
+
+export function deleteCollection(id) {
+  const collections = getCollections().filter((c) => c.id !== id);
+  saveCollections(collections);
+}
+
+export function saveRequestToCollection(collectionId, request) {
+  const collections = getCollections();
+  const col = collections.find((c) => c.id === collectionId);
+  if (!col) return;
+
+  const req = { ...request, id: Date.now().toString(), savedAt: new Date().toISOString() };
+  col.requests.push(req);
+  saveCollections(collections);
+  return req;
+}
+
+export function deleteRequestFromCollection(collectionId, requestId) {
+  const collections = getCollections();
+  const col = collections.find((c) => c.id === collectionId);
+  if (!col) return;
+  col.requests = col.requests.filter((r) => r.id !== requestId);
+  saveCollections(collections);
+}
+
+// ─── History (last 50 requests) ──────────────────────────────────────────
+export function getHistory() {
+  return load(KEYS.HISTORY, []);
+}
+
+export function addToHistory(request, response) {
+  const history = getHistory();
+  history.unshift({ request, response, timestamp: new Date().toISOString(), id: Date.now().toString() });
+  save(KEYS.HISTORY, history.slice(0, 50)); // Keep only last 50
+}
+
+export function clearHistory() {
+  save(KEYS.HISTORY, []);
+}
+
+// ─── Environments ─────────────────────────────────────────────────────────
+export function getEnvironments() {
+  return load(KEYS.ENVS, []);
+}
+
+export function saveEnvironments(envs) {
+  save(KEYS.ENVS, envs);
+}
+
+export function createEnvironment(name) {
+  const envs = getEnvironments();
+  const env = { id: Date.now().toString(), name, variables: {} };
+  envs.push(env);
+  saveEnvironments(envs);
+  return env;
+}
+
+export function getActiveEnvironment() {
+  const id = load(KEYS.ACTIVE_ENV);
+  if (!id) return null;
+  return getEnvironments().find((e) => e.id === id) || null;
+}
+
+export function setActiveEnvironment(id) {
+  save(KEYS.ACTIVE_ENV, id);
+}
+
+export function updateEnvironment(id, updates) {
+  const envs = getEnvironments().map((e) => (e.id === id ? { ...e, ...updates } : e));
+  saveEnvironments(envs);
+}
+
+export function deleteEnvironment(id) {
+  const envs = getEnvironments().filter((e) => e.id !== id);
+  saveEnvironments(envs);
+  if (load(KEYS.ACTIVE_ENV) === id) save(KEYS.ACTIVE_ENV, null);
+}
+
+/**
+ * Resolves {{variable}} placeholders in a string using the active environment.
+ */
+export function resolveVariables(text) {
+  if (!text || typeof text !== 'string') return text;
+  const env = getActiveEnvironment();
+  if (!env) return text;
+
+  return text.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+    return env.variables[key] !== undefined ? env.variables[key] : `{{${key}}}`;
+  });
+}

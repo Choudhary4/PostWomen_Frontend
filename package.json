@@ -4,21 +4,22 @@
   "description": "Frontend React app for PostWomen",
   "private": true,
   "dependencies": {
+    "autoprefixer": "^10.4.16",
+    "axios": "^1.6.0",
+    "lucide-react": "^0.292.0",
+    "postcss": "^8.4.31",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-router-dom": "^7.14.2",
     "react-scripts": "5.0.1",
-    "axios": "^1.6.0",
-    "tailwindcss": "^3.3.0",
-    "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.31",
-    "lucide-react": "^0.292.0"
+    "tailwindcss": "^3.3.0"
   },
-"scripts": {
-  "start": "react-scripts start",
-  "build": "CI=false react-scripts build",
-  "test": "react-scripts test",
-  "eject": "react-scripts eject"
-},
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "CI=false react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
   "eslintConfig": {
     "extends": [
       "react-app",

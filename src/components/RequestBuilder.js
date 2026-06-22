@@ -1,777 +1,355 @@
-import React, { useState, useEffect } from 'react';
-import { Send, Save, Plus, Trash2, Key, Eye, EyeOff, Globe, Settings } from 'lucide-react';
-import { environmentService } from '../services/environmentService';
-import TestScriptEditor from './TestScriptEditor';
-import GraphQLQueryBuilder from './GraphQLQueryBuilder';
-import OAuthManager from './OAuthManager';
+import React, { useState } from 'react';
+import { getCollections, saveRequestToCollection } from '../services/storageService';
 
-const RequestBuilder = ({ 
-  request, 
-  onRequestChange, 
-  onSendRequest, 
-  onSaveRequest,
-  collections,
-  loading 
-}) => {
-  const [activeTab, setActiveTab] = useState('headers');
+const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+
+const METHOD_COLORS = {
+  GET: 'var(--method-get)', POST: 'var(--method-post)', PUT: 'var(--method-put)',
+  DELETE: 'var(--method-delete)', PATCH: 'var(--method-patch)',
+  HEAD: 'var(--method-head)', OPTIONS: 'var(--method-options)',
+};
+
+export default function RequestBuilder({ request, onChange, onSend, loading }) {
+  const [tab, setTab] = useState('params'); // params | headers | body | auth
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [saveRequestName, setSaveRequestName] = useState('');
-  const [selectedCollection, setSelectedCollection] = useState('');
-  const [activeEnvironment, setActiveEnvironment] = useState(null);
-  const [showVariablePreview, setShowVariablePreview] = useState(false);
 
-  useEffect(() => {
-    // Load active environment
-    const env = environmentService.getActiveEnvironment();
-    setActiveEnvironment(env);
-  }, []);
-
-  const HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'];
-
-  const handleUrlChange = (e) => {
-    onRequestChange({ ...request, url: e.target.value });
-  };
-
-  const handleMethodChange = (e) => {
-    onRequestChange({ ...request, method: e.target.value });
-  };
-
-  const handleHeaderChange = (key, value, index) => {
-    const newHeaders = { ...request.headers };
-    
-    if (key === '' && value === '') {
-      // Remove empty header
-      delete newHeaders[index];
-    } else if (key) {
-      delete newHeaders[index]; // Remove old key
-      newHeaders[key] = value;
-    }
-    
-    onRequestChange({ ...request, headers: newHeaders });
-  };
-
-  const addHeader = () => {
-    const newHeaders = { ...request.headers };
-    const newKey = `header_${Date.now()}`;
-    newHeaders[newKey] = '';
-    onRequestChange({ ...request, headers: newHeaders });
-  };
-
-  const removeHeader = (key) => {
-    const newHeaders = { ...request.headers };
-    delete newHeaders[key];
-    onRequestChange({ ...request, headers: newHeaders });
-  };
-
-  const handleBodyChange = (e) => {
-    onRequestChange({ ...request, body: e.target.value });
-  };
-
-  const handleScriptChange = (scriptType, value) => {
-    onRequestChange({ ...request, [scriptType]: value });
-  };
-
-  const handleSaveRequest = () => {
-    if (saveRequestName && selectedCollection) {
-      onSaveRequest(saveRequestName, selectedCollection);
-      setShowSaveModal(false);
-      setSaveRequestName('');
-      setSelectedCollection('');
-    }
-  };
-
-  const getPreviewRequest = () => {
-    const dynamicVars = environmentService.getDynamicVariables();
-    return {
-      url: environmentService.resolveVariables(request.url, dynamicVars),
-      headers: Object.entries(request.headers).reduce((acc, [key, value]) => {
-        const resolvedKey = environmentService.resolveVariables(key, dynamicVars);
-        const resolvedValue = environmentService.resolveVariables(value, dynamicVars);
-        acc[resolvedKey] = resolvedValue;
-        return acc;
-      }, {}),
-      body: environmentService.resolveVariables(request.body, dynamicVars)
-    };
-  };
-
-  const validateVariables = () => {
-    const urlValidation = environmentService.validateVariables(request.url);
-    const bodyValidation = environmentService.validateVariables(request.body || '');
-    
-    const headerValidations = Object.entries(request.headers).map(([key, value]) => ({
-      key: environmentService.validateVariables(key),
-      value: environmentService.validateVariables(value)
-    }));
-
-    return {
-      url: urlValidation,
-      body: bodyValidation,
-      headers: headerValidations
-    };
-  };
-
-  const validationResults = validateVariables();
-  const hasValidationErrors = !validationResults.url.isValid || 
-                             !validationResults.body.isValid ||
-                             validationResults.headers.some(h => !h.key.isValid || !h.value.isValid);
-
-  const canShowBody = ['POST', 'PUT', 'PATCH'].includes(request.method);
-  
-  // Detect GraphQL requests
-  const isGraphQLRequest = request.url && 
-    (request.url.includes('/graphql') || 
-     request.url.includes('/graphiql') ||
-     Object.values(request.headers).some(value => 
-       typeof value === 'string' && value.includes('application/graphql')
-     ));
-
-  const handleGraphQLQueryChange = (query) => {
-    onRequestChange({ 
-      ...request, 
-      body: JSON.stringify({ query }),
-      headers: {
-        ...request.headers,
-        'Content-Type': 'application/json'
-      }
-    });
-  };
-
-  const handleGraphQLVariablesChange = (variables) => {
-    try {
-      const parsedVars = JSON.parse(variables);
-      const currentBody = request.body ? JSON.parse(request.body) : {};
-      onRequestChange({ 
-        ...request, 
-        body: JSON.stringify({ 
-          ...currentBody, 
-          variables: parsedVars 
-        })
-      });
-    } catch (e) {
-      // Invalid JSON, ignore
-    }
-  };
-
-  const executeIntrospectionQuery = async () => {
-    const introspectionQuery = `
-      query IntrospectionQuery {
-        __schema {
-          types {
-            name
-            description
-            fields {
-              name
-              description
-              type {
-                name
-                ofType {
-                  name
-                }
-              }
-            }
-          }
-        }
-      }
-    `;
-    
-    // Execute introspection query
-    const introspectionRequest = {
-      ...request,
-      body: JSON.stringify({ query: introspectionQuery }),
-      headers: {
-        ...request.headers,
-        'Content-Type': 'application/json'
-      }
-    };
-    
-    // This would trigger the actual request
-    onSendRequest(introspectionRequest);
-  };
+  const set = (key, val) => onChange((prev) => ({ ...prev, [key]: val }));
 
   return (
-    <div className="card p-3 sm:p-4 lg:p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 space-y-3 sm:space-y-0">
-        <h2 className="text-lg font-semibold text-gray-900">Request Builder</h2>
-        <div className="flex items-center space-x-2">
-          {activeEnvironment && (
-            <div className="flex items-center space-x-2 px-2 sm:px-3 py-1 bg-green-50 rounded-lg">
-              <Globe className="w-4 h-4 text-green-600" />
-              <span className="text-sm font-medium text-green-800 hidden sm:inline">{activeEnvironment.name}</span>
-              <span className="text-xs font-medium text-green-800 sm:hidden">{activeEnvironment.name.substring(0, 8)}...</span>
-            </div>
-          )}
-          <button
-            onClick={() => setShowVariablePreview(!showVariablePreview)}
-            className={`p-2 rounded-lg touch-manipulation ${showVariablePreview ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'}`}
-            title="Preview resolved variables"
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        {/* URL and Method */}
-        <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+    <div className="card">
+      {/* ── URL Bar ── */}
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
+        <div className="url-bar">
+          {/* Method Selector */}
           <select
+            id="method-select"
+            className="method-select select"
             value={request.method}
-            onChange={handleMethodChange}
-            className="px-3 py-3 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white min-w-[100px] text-base sm:text-sm touch-manipulation"
+            onChange={(e) => set('method', e.target.value)}
+            style={{ color: METHOD_COLORS[request.method] || 'var(--text-primary)' }}
           >
-            {HTTP_METHODS.map(method => (
-              <option key={method} value={method}>{method}</option>
+            {METHODS.map((m) => (
+              <option key={m} value={m} style={{ color: METHOD_COLORS[m] || 'inherit' }}>
+                {m}
+              </option>
             ))}
           </select>
-          
-          <div className="flex-1 relative">
-            <input
-              type="text"
-              value={request.url}
-              onChange={handleUrlChange}
-              placeholder="https://api.example.com/users or {{baseUrl}}/users"
-              className={`input-field pr-10 text-base sm:text-sm ${!validationResults.url.isValid ? 'border-red-300' : ''}`}
-            />
-            {!validationResults.url.isValid && (
-              <div className="absolute right-2 top-2 text-red-500" title={validationResults.url.errors.join(', ')}>
-                ⚠️
-              </div>
-            )}
-          </div>
-          
+
+          {/* URL Input */}
+          <input
+            id="url-input"
+            type="text"
+            className="url-input"
+            placeholder="https://api.example.com/endpoint"
+            value={request.url}
+            onChange={(e) => set('url', e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && onSend()}
+          />
+
+          {/* Send Button */}
           <button
-            onClick={onSendRequest}
-            disabled={loading || !request.url || hasValidationErrors}
-            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center w-full sm:w-auto py-3 sm:py-2 text-base sm:text-sm touch-manipulation"
+            id="btn-send"
+            className={`btn-send ${loading ? 'loading' : ''}`}
+            onClick={onSend}
+            disabled={loading || !request.url.trim()}
           >
-            <Send className="w-4 h-4 mr-2" />
-            {loading ? 'Sending...' : 'Send'}
+            {loading ? <span className="spinner" /> : 'Send'}
           </button>
-        </div>
-
-        {/* Validation Errors */}
-        {hasValidationErrors && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-800 font-medium">Variable Validation Errors:</p>
-            <ul className="text-red-700 text-sm mt-1 space-y-1">
-              {validationResults.url.errors.map((error, index) => (
-                <li key={index}>URL: {error}</li>
-              ))}
-              {validationResults.body.errors.map((error, index) => (
-                <li key={index}>Body: {error}</li>
-              ))}
-              {validationResults.headers.flatMap((h, index) => [
-                ...h.key.errors.map(error => `Header ${index + 1} key: ${error}`),
-                ...h.value.errors.map(error => `Header ${index + 1} value: ${error}`)
-              ]).map((error, index) => (
-                <li key={index}>{error}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Variable Preview */}
-        {showVariablePreview && (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="font-medium text-blue-900 mb-2">Resolved Variables Preview</h4>
-            <div className="space-y-2 text-sm">
-              <div>
-                <span className="font-medium text-blue-800">URL: </span>
-                <code className="text-blue-700">{getPreviewRequest().url}</code>
-              </div>
-              {Object.keys(getPreviewRequest().headers).length > 0 && (
-                <div>
-                  <span className="font-medium text-blue-800">Headers: </span>
-                  <pre className="text-blue-700 mt-1">{JSON.stringify(getPreviewRequest().headers, null, 2)}</pre>
-                </div>
-              )}
-              {getPreviewRequest().body && (
-                <div>
-                  <span className="font-medium text-blue-800">Body: </span>
-                  <pre className="text-blue-700 mt-1">{getPreviewRequest().body}</pre>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 sm:space-x-2">
-          <button
-            onClick={() => setShowSaveModal(true)}
-            className="btn-secondary text-sm flex items-center justify-center py-3 sm:py-2 touch-manipulation"
-          >
-            <Save className="w-4 h-4 mr-1" />
-            Save
-          </button>
-          
-          <button
-            onClick={() => setShowAuthModal(true)}
-            className="btn-secondary text-sm flex items-center justify-center py-3 sm:py-2 touch-manipulation"
-          >
-            <Key className="w-4 h-4 mr-1" />
-            Auth
-          </button>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto">
-            <button
-              onClick={() => setActiveTab('headers')}
-              className={`py-3 sm:py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap touch-manipulation ${
-                activeTab === 'headers'
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <span className="hidden sm:inline">Headers ({Object.keys(request.headers).length})</span>
-              <span className="sm:hidden">Headers</span>
-            </button>
-            
-            {canShowBody && (
-              <button
-                onClick={() => setActiveTab('body')}
-                className={`py-3 sm:py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap touch-manipulation ${
-                  activeTab === 'body'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                {isGraphQLRequest ? 'GraphQL' : 'Body'}
-              </button>
-            )}
-            
-            <button
-              onClick={() => setActiveTab('scripts')}
-              className={`py-3 sm:py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap touch-manipulation ${
-                activeTab === 'scripts'
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Scripts
-              {(request.preRequestScript || request.postRequestScript) && (
-                <span className="ml-1 w-2 h-2 bg-blue-500 rounded-full inline-block"></span>
-              )}
-            </button>
-          </nav>
-        </div>
-
-        {/* Tab Content */}
-        <div className="space-y-3">
-          {activeTab === 'headers' && (
-            <HeadersEditor
-              headers={request.headers}
-              onHeaderChange={handleHeaderChange}
-              onAddHeader={addHeader}
-              onRemoveHeader={removeHeader}
-            />
-          )}
-          
-          {activeTab === 'body' && canShowBody && (
-            isGraphQLRequest ? (
-              <GraphQLQueryBuilder
-                query={(() => {
-                  try {
-                    const body = JSON.parse(request.body || '{}');
-                    return body.query || '';
-                  } catch (e) {
-                    return request.body || '';
-                  }
-                })()}
-                variables={(() => {
-                  try {
-                    const body = JSON.parse(request.body || '{}');
-                    return JSON.stringify(body.variables || {}, null, 2);
-                  } catch (e) {
-                    return '{}';
-                  }
-                })()}
-                onQueryChange={handleGraphQLQueryChange}
-                onVariablesChange={handleGraphQLVariablesChange}
-                onExecuteIntrospection={executeIntrospectionQuery}
-              />
-            ) : (
-              <BodyEditor
-                body={request.body}
-                onBodyChange={handleBodyChange}
-              />
-            )
-          )}
-          
-          {activeTab === 'scripts' && (
-            <TestScriptEditor
-              preRequestScript={request.preRequestScript || ''}
-              postRequestScript={request.postRequestScript || ''}
-              onScriptChange={handleScriptChange}
-              testResults={request.lastTestResults}
-              preRequestLogs={request.lastPreRequestLogs}
-            />
-          )}
         </div>
       </div>
 
-      {/* Save Request Modal */}
+      {/* ── Tabs Bar ── */}
+      <div className="tab-bar">
+        {['params', 'headers', 'body', 'auth'].map((t) => (
+          <button
+            key={t}
+            id={`tab-${t}`}
+            className={`tab ${tab === t ? 'active' : ''}`}
+            onClick={() => setTab(t)}
+          >
+            {t.charAt(0).toUpperCase() + t.slice(1)}
+            {t === 'headers' && Object.keys(request.headers || {}).length > 0 && (
+              <span style={{ marginLeft: 4, background: 'var(--accent-dim)', color: 'var(--accent)', borderRadius: 10, padding: '0 5px', fontSize: 10 }}>
+                {Object.keys(request.headers).length}
+              </span>
+            )}
+          </button>
+        ))}
+
+        <button
+          id="btn-save-request"
+          className="tab"
+          style={{ marginLeft: 'auto', color: 'var(--accent)' }}
+          onClick={() => setShowSaveModal(true)}
+        >
+          + Save
+        </button>
+      </div>
+
+      {/* ── Tab Content ── */}
+      <div style={{ padding: '14px 16px' }}>
+        {tab === 'params'  && <ParamsTab  request={request} set={set} />}
+        {tab === 'headers' && <HeadersTab request={request} set={set} />}
+        {tab === 'body'    && <BodyTab    request={request} set={set} />}
+        {tab === 'auth'    && <AuthTab    request={request} set={set} />}
+      </div>
+
+      {/* ── Save Modal ── */}
       {showSaveModal && (
-        <SaveRequestModal
-          requestName={saveRequestName}
-          setRequestName={setSaveRequestName}
-          collections={collections}
-          selectedCollection={selectedCollection}
-          setSelectedCollection={setSelectedCollection}
-          onSave={handleSaveRequest}
+        <SaveModal
+          request={request}
           onClose={() => setShowSaveModal(false)}
         />
       )}
-
-      {/* Auth Modal */}
-      {showAuthModal && (
-        <AuthModal
-          auth={request.auth}
-          onAuthChange={(auth) => onRequestChange({ ...request, auth })}
-          onClose={() => setShowAuthModal(false)}
-        />
-      )}
     </div>
   );
-};
+}
 
-const HeadersEditor = ({ headers, onHeaderChange, onAddHeader, onRemoveHeader }) => {
-  const headerEntries = Object.entries(headers);
+// ─── Params Tab ────────────────────────────────────────────────────────────
+// Shows URL query params parsed from the URL + lets user add/edit them
+function ParamsTab({ request, set }) {
+  // Parse current params from URL
+  const getParams = () => {
+    try {
+      const url = new URL(request.url.includes('://') ? request.url : 'http://placeholder' + request.url);
+      const params = [];
+      url.searchParams.forEach((v, k) => params.push({ key: k, value: v }));
+      return params;
+    } catch { return []; }
+  };
+
+  const params = getParams();
+
+  if (params.length === 0) {
+    return (
+      <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+        Add query parameters directly in the URL (e.g. <code className="mono">?key=value&amp;foo=bar</code>), or they'll appear here automatically.
+      </p>
+    );
+  }
 
   return (
-    <div className="space-y-2">
-      <div className="flex justify-between items-center">
-        <h3 className="text-sm font-medium text-gray-700">Request Headers</h3>
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 6 }}>
+        <span className="label">Key</span>
+        <span className="label">Value</span>
+      </div>
+      {params.map((p, i) => (
+        <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 6 }}>
+          <input className="input" style={{ fontSize: 12, fontFamily: 'var(--font-mono)' }} value={p.key} readOnly />
+          <input className="input" style={{ fontSize: 12, fontFamily: 'var(--font-mono)' }} value={p.value} readOnly />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Headers Tab ───────────────────────────────────────────────────────────
+function HeadersTab({ request, set }) {
+  const headers = Object.entries(request.headers || {});
+
+  const update = (index, field, val) => {
+    const entries = [...headers];
+    entries[index] = field === 'key'
+      ? [val, entries[index][1]]
+      : [entries[index][0], val];
+
+    // Rebuild headers object, skip empty keys
+    const obj = {};
+    entries.forEach(([k, v]) => { if (k) obj[k] = v; });
+    set('headers', obj);
+  };
+
+  const addRow = () => {
+    const obj = { ...request.headers, '': '' };
+    set('headers', obj);
+  };
+
+  const removeRow = (key) => {
+    const obj = { ...request.headers };
+    delete obj[key];
+    set('headers', obj);
+  };
+
+  return (
+    <div>
+      <div className="kv-row" style={{ marginBottom: 8 }}>
+        <span className="label">Key</span>
+        <span className="label">Value</span>
+        <span />
+      </div>
+
+      {headers.map(([key, value], i) => (
+        <div key={i} className="kv-row">
+          <input
+            className="input"
+            style={{ fontSize: 12 }}
+            placeholder="Content-Type"
+            value={key}
+            onChange={(e) => update(i, 'key', e.target.value)}
+          />
+          <input
+            className="input"
+            style={{ fontSize: 12 }}
+            placeholder="application/json"
+            value={value}
+            onChange={(e) => update(i, 'value', e.target.value)}
+          />
+          <button className="btn-icon" onClick={() => removeRow(key)} title="Remove">✕</button>
+        </div>
+      ))}
+
+      <button id="btn-add-header" className="btn btn-ghost" style={{ fontSize: 12, marginTop: 4 }} onClick={addRow}>
+        + Add Header
+      </button>
+    </div>
+  );
+}
+
+// ─── Body Tab ──────────────────────────────────────────────────────────────
+function BodyTab({ request, set }) {
+  const noBody = ['GET', 'HEAD', 'OPTIONS'].includes(request.method);
+
+  if (noBody) {
+    return (
+      <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+        {request.method} requests don't have a body.
+      </p>
+    );
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <span className="label" style={{ margin: 0 }}>Request Body (JSON)</span>
         <button
-          onClick={onAddHeader}
-          className="text-sm text-primary hover:text-orange-600 flex items-center"
+          className="btn btn-ghost"
+          style={{ fontSize: 11 }}
+          onClick={() => {
+            try {
+              const formatted = JSON.stringify(JSON.parse(request.body || '{}'), null, 2);
+              set('body', formatted);
+            } catch { /* Not valid JSON — leave as is */ }
+          }}
         >
-          <Plus className="w-4 h-4 mr-1" />
-          Add Header
+          Format JSON
         </button>
       </div>
-      
-      {headerEntries.length === 0 ? (
-        <div className="text-center py-4 text-gray-500 bg-gray-50 rounded-lg">
-          <p className="text-sm">No headers added</p>
-          <button
-            onClick={onAddHeader}
-            className="text-primary hover:text-orange-600 text-sm mt-1"
-          >
-            Add your first header
-          </button>
+      <textarea
+        id="body-input"
+        className="textarea"
+        placeholder={'{\n  "key": "value"\n}'}
+        value={request.body || ''}
+        onChange={(e) => set('body', e.target.value)}
+        style={{ minHeight: 160 }}
+      />
+    </div>
+  );
+}
+
+// ─── Auth Tab ──────────────────────────────────────────────────────────────
+function AuthTab({ request, set }) {
+  const auth = request.auth || { type: 'none' };
+  const setAuth = (updates) => set('auth', { ...auth, ...updates });
+
+  return (
+    <div>
+      <div className="form-group">
+        <label className="label">Auth Type</label>
+        <select
+          id="auth-type-select"
+          className="select"
+          value={auth.type || 'none'}
+          onChange={(e) => set('auth', { type: e.target.value })}
+        >
+          <option value="none">No Auth</option>
+          <option value="bearer">Bearer Token</option>
+          <option value="basic">Basic Auth</option>
+          <option value="apikey">API Key</option>
+        </select>
+      </div>
+
+      {auth.type === 'bearer' && (
+        <div className="form-group">
+          <label className="label">Token</label>
+          <input
+            id="auth-token"
+            className="input"
+            style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}
+            placeholder="eyJhbGci..."
+            value={auth.token || ''}
+            onChange={(e) => setAuth({ token: e.target.value })}
+          />
         </div>
-      ) : (
-        <div className="space-y-2">
-          {headerEntries.map(([key, value], index) => (
-            <div key={key} className="flex space-x-2">
-              <input
-                type="text"
-                placeholder="Header name"
-                value={key.startsWith('header_') ? '' : key}
-                onChange={(e) => onHeaderChange(e.target.value, value, key)}
-                className="input-field flex-1"
-              />
-              <input
-                type="text"
-                placeholder="Header value"
-                value={value}
-                onChange={(e) => onHeaderChange(key, e.target.value, key)}
-                className="input-field flex-1"
-              />
-              <button
-                onClick={() => onRemoveHeader(key)}
-                className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
+      )}
+
+      {auth.type === 'basic' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div className="form-group">
+            <label className="label">Username</label>
+            <input className="input" placeholder="username" value={auth.username || ''} onChange={(e) => setAuth({ username: e.target.value })} />
+          </div>
+          <div className="form-group">
+            <label className="label">Password</label>
+            <input className="input" type="password" placeholder="••••••••" value={auth.password || ''} onChange={(e) => setAuth({ password: e.target.value })} />
+          </div>
+        </div>
+      )}
+
+      {auth.type === 'apikey' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div className="form-group">
+            <label className="label">Header Name</label>
+            <input className="input" placeholder="X-API-Key" value={auth.key || ''} onChange={(e) => setAuth({ key: e.target.value })} />
+          </div>
+          <div className="form-group">
+            <label className="label">Value</label>
+            <input className="input" placeholder="your-api-key" value={auth.value || ''} onChange={(e) => setAuth({ value: e.target.value })} />
+          </div>
         </div>
       )}
     </div>
   );
-};
+}
 
-const BodyEditor = ({ body, onBodyChange }) => {
-  return (
-    <div className="space-y-2">
-      <h3 className="text-sm font-medium text-gray-700">Request Body</h3>
-      <textarea
-        value={body}
-        onChange={onBodyChange}
-        placeholder="Enter request body (JSON, XML, plain text, etc.)"
-        className="input-field h-40 font-mono text-sm resize-y"
-      />
-      <div className="text-xs text-gray-500">
-        Tip: For JSON data, make sure to set Content-Type header to application/json
-      </div>
-    </div>
-  );
-};
-
-const SaveRequestModal = ({
-  requestName,
-  setRequestName,
-  collections,
-  selectedCollection,
-  setSelectedCollection,
-  onSave,
-  onClose
-}) => {
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-sm sm:max-w-md lg:max-w-lg shadow-xl">
-        <h3 className="text-lg font-semibold mb-4">Save Request</h3>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Request Name
-            </label>
-            <input
-              type="text"
-              value={requestName}
-              onChange={(e) => setRequestName(e.target.value)}
-              placeholder="My API Request"
-              className="input-field text-base sm:text-sm"
-              autoFocus
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Collection
-            </label>
-            <select
-              value={selectedCollection}
-              onChange={(e) => setSelectedCollection(e.target.value)}
-              className="input-field text-base sm:text-sm"
-            >
-              <option value="">Select a collection</option>
-              {collections.map(collection => (
-                <option key={collection.id} value={collection.id}>
-                  {collection.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-0 sm:space-x-3 mt-6">
-          <button 
-            onClick={onClose} 
-            className="btn-secondary py-3 sm:py-2 text-base sm:text-sm touch-manipulation order-2 sm:order-1"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onSave}
-            disabled={!requestName || !selectedCollection}
-            className="btn-primary disabled:opacity-50 py-3 sm:py-2 text-base sm:text-sm touch-manipulation order-1 sm:order-2"
-          >
-            Save Request
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const AuthModal = ({ auth, onAuthChange, onClose }) => {
-  const [authType, setAuthType] = useState(auth?.type || 'none');
-  const [authData, setAuthData] = useState(auth || {});
-  const [showPassword, setShowPassword] = useState(false);
-  const [showOAuthManager, setShowOAuthManager] = useState(false);
+// ─── Save Modal ────────────────────────────────────────────────────────────
+function SaveModal({ request, onClose }) {
+  const [name, setName]           = useState(request.name || '');
+  const [collectionId, setCollId] = useState('');
+  const [newColName, setNewColName] = useState('');
+  const [collections, setCols]    = useState(getCollections);
 
   const handleSave = () => {
-    if (authType === 'none') {
-      onAuthChange(null);
-    } else {
-      onAuthChange({ ...authData, type: authType });
-    }
+    if (!collectionId) return;
+    saveRequestToCollection(collectionId, { ...request, name: name || request.url });
     onClose();
   };
 
-  const handleOAuthSelect = (provider, tokens) => {
-    setAuthType('oauth2');
-    setAuthData({
-      type: 'oauth2',
-      providerId: provider.id,
-      providerName: provider.name,
-      accessToken: tokens.access_token,
-      tokenType: tokens.token_type || 'Bearer'
-    });
-    setShowOAuthManager(false);
-  };
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-96 max-w-full mx-4">
-        <h3 className="text-lg font-semibold mb-4">Authentication</h3>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Type
-            </label>
-            <select
-              value={authType}
-              onChange={(e) => setAuthType(e.target.value)}
-              className="input-field"
-            >
-              <option value="none">No Authentication</option>
-              <option value="bearer">Bearer Token</option>
-              <option value="apikey">API Key</option>
-              <option value="basic">Basic Auth</option>
-              <option value="oauth2">OAuth 2.0</option>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <span className="modal-title">Save Request</span>
+          <button className="btn-icon" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          <div className="form-group">
+            <label className="label">Request Name</label>
+            <input id="save-request-name" className="input" placeholder={request.url} value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label className="label">Collection</label>
+            <select id="save-collection-select" className="select w-full" value={collectionId} onChange={(e) => setCollId(e.target.value)}>
+              <option value="">— Select a collection —</option>
+              {collections.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
-          
-          {authType === 'bearer' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Token
-              </label>
-              <input
-                type="text"
-                value={authData.token || ''}
-                onChange={(e) => setAuthData({ ...authData, token: e.target.value })}
-                placeholder="Your bearer token"
-                className="input-field"
-              />
-            </div>
-          )}
-          
-          {authType === 'apikey' && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Key
-                </label>
-                <input
-                  type="text"
-                  value={authData.key || ''}
-                  onChange={(e) => setAuthData({ ...authData, key: e.target.value })}
-                  placeholder="API key header name (e.g., X-API-Key)"
-                  className="input-field"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Value
-                </label>
-                <input
-                  type="text"
-                  value={authData.value || ''}
-                  onChange={(e) => setAuthData({ ...authData, value: e.target.value })}
-                  placeholder="API key value"
-                  className="input-field"
-                />
-              </div>
-            </>
-          )}
-          
-          {authType === 'basic' && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Username
-                </label>
-                <input
-                  type="text"
-                  value={authData.username || ''}
-                  onChange={(e) => setAuthData({ ...authData, username: e.target.value })}
-                  placeholder="Username"
-                  className="input-field"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={authData.password || ''}
-                    onChange={(e) => setAuthData({ ...authData, password: e.target.value })}
-                    placeholder="Password"
-                    className="input-field pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
-          
-          {authType === 'oauth2' && (
-            <div className="space-y-3">
-              {authData.providerName ? (
-                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-green-800">
-                        OAuth 2.0 - {authData.providerName}
-                      </p>
-                      <p className="text-xs text-green-600">
-                        Access token configured
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowOAuthManager(true)}
-                      className="text-sm text-green-600 hover:text-green-800 underline"
-                    >
-                      Change
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-800 mb-2">
-                    Configure OAuth 2.0 authentication
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setShowOAuthManager(true)}
-                    className="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
-                  >
-                    Setup OAuth Provider
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
         </div>
-        
-        <div className="flex justify-end space-x-3 mt-6">
-          <button onClick={onClose} className="btn-secondary">
-            Cancel
-          </button>
-          <button onClick={handleSave} className="btn-primary">
-            Save
-          </button>
+        <div className="modal-footer">
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" disabled={!collectionId} onClick={handleSave}>Save</button>
         </div>
-
-        {/* OAuth Manager Modal */}
-        {showOAuthManager && (
-          <OAuthManager
-            isOpen={showOAuthManager}
-            onClose={() => setShowOAuthManager(false)}
-            onOAuthSelect={handleOAuthSelect}
-          />
-        )}
       </div>
     </div>
   );
-};
-
-export default RequestBuilder;
+}
