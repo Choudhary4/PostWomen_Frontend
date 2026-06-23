@@ -8,29 +8,29 @@
 /* ─── CSS Custom Properties (Tokens) ─────────────────────────── */
 :root {
   /* Backgrounds */
-  --bg-app:       #0a0a0a;
-  --bg-surface:   #111111;
-  --bg-elevated:  #1a1a1a;
-  --bg-hover:     #222222;
-  --bg-active:    #2a2a2a;
+  --bg-app:       #0c0e12;
+  --bg-surface:   #111317;
+  --bg-elevated:  #1a1d23;
+  --bg-hover:     #282a2e;
+  --bg-active:    #1e2024;
 
   /* Borders */
-  --border:       #282828;
-  --border-strong:#3a3a3a;
+  --border:       #2d3139;
+  --border-strong:#3c494e;
 
   /* Text */
-  --text-primary:   #f0f0f0;
-  --text-secondary: #888888;
-  --text-muted:     #555555;
+  --text-primary:   #e2e2e8;
+  --text-secondary: #bbc9cf;
+  --text-muted:     #859398;
 
   /* Brand Accent */
-  --accent:         #7c6af7;
-  --accent-hover:   #8f7ef9;
-  --accent-dim:     rgba(124, 106, 247, 0.15);
+  --accent:         #00d4ff;
+  --accent-hover:   #3cd7ff;
+  --accent-dim:     rgba(0, 212, 255, 0.15);
 
   /* HTTP Method Colors */
   --method-get:     #22c55e;
-  --method-post:    #f59e0b;
+  --method-post:    #ff6b00;
   --method-put:     #3b82f6;
   --method-delete:  #ef4444;
   --method-patch:   #8b5cf6;
@@ -39,9 +39,9 @@
 
   /* Status Colors */
   --green:   #22c55e;
-  --yellow:  #f59e0b;
+  --yellow:  #ff6b00;
   --red:     #ef4444;
-  --blue:    #3b82f6;
+  --blue:    #00d4ff;
 
   /* Spacing */
   --radius-sm: 4px;
@@ -122,12 +122,14 @@ code, pre, .mono { font-family: var(--font-mono); font-size: 12px; }
 .header-logo-icon {
   width: 28px;
   height: 28px;
-  background: linear-gradient(135deg, var(--accent), #a78bfa);
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent-dim);
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
+  color: #0c0e12;
 }
 
 .header-nav {
@@ -260,7 +262,8 @@ code, pre, .mono { font-family: var(--font-mono); font-size: 12px; }
 
 /* ─── Cards / Panels ──────────────────────────────────────────── */
 .card {
-  background: var(--bg-surface);
+  background: rgba(17, 19, 23, 0.7);
+  backdrop-filter: blur(12px);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -409,11 +412,12 @@ code, pre, .mono { font-family: var(--font-mono); font-size: 12px; }
 
 .btn-primary {
   background: var(--accent);
-  color: #fff;
+  color: #0c0e12;
   border-color: var(--accent);
+  box-shadow: 0 0 12px var(--accent-dim);
 }
 
-.btn-primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); box-shadow: 0 0 16px rgba(0, 212, 255, 0.3); }
 
 .btn-secondary {
   background: var(--bg-elevated);
@@ -442,7 +446,7 @@ code, pre, .mono { font-family: var(--font-mono); font-size: 12px; }
 
 .btn-send {
   background: var(--accent);
-  color: #fff;
+  color: #0c0e12;
   border-color: var(--accent);
   padding: 8px 20px;
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
@@ -450,9 +454,10 @@ code, pre, .mono { font-family: var(--font-mono); font-size: 12px; }
   font-size: 13px;
   min-width: 80px;
   justify-content: center;
+  box-shadow: 0 0 15px var(--accent-dim);
 }
 
-.btn-send:hover:not(:disabled) { background: var(--accent-hover); }
+.btn-send:hover:not(:disabled) { background: var(--accent-hover); box-shadow: 0 0 20px rgba(0, 212, 255, 0.3); }
 .btn-send.loading { opacity: 0.7; }
 
 .btn-icon {
